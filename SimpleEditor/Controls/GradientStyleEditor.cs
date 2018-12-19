@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using EditorModel.Renderers;
 using EditorModel.Selections;
+using EditorModel.Style;
 
 namespace SimpleEditor.Controls
 {
-    public partial class GlowStyleEditor : UserControl, IEditor<Selection>
+    public partial class GradientStyleEditor : UserControl, IEditor<Selection>
     {
         private Selection _selection;
         private int _updating;
@@ -14,7 +14,7 @@ namespace SimpleEditor.Controls
         public event EventHandler<ChangingEventArgs> StartChanging = delegate { };
         public event EventHandler<EventArgs> Changed = delegate { };
 
-        public GlowStyleEditor()
+        public GradientStyleEditor()
         {
             InitializeComponent();
         }
@@ -22,21 +22,19 @@ namespace SimpleEditor.Controls
         public void Build(Selection selection)
         {
             // check visibility
-            Visible = selection.ForAll(f => RendererDecorator.ContainsType(f.Renderer, typeof(GlowRenderer)));
+            Visible = selection.ForAll(f => f.Style.FillStyle is IGradientFill);
             if (!Visible) return; // do not build anything
 
             // remember editing object
             _selection = selection;
 
             // get list of objects
-            var glowStyles = _selection.Select(f =>
-                 (GlowRenderer)RendererDecorator.GetDecorator(f.Renderer, typeof(GlowRenderer))).ToList();
+            var fillStyles = selection.Select(f => f.Style.FillStyle as IGradientFill).ToList();
 
             // copy properties of object to GUI
             _updating++;
 
-            lbColor.BackColor = glowStyles.GetProperty(f => f.Color);
-
+            lbGradientColor.BackColor = fillStyles.GetProperty(f => f.GradientColor);
             _updating--;
         }
 
@@ -45,29 +43,28 @@ namespace SimpleEditor.Controls
             if (_updating > 0) return; // we are in updating mode
 
             // fire event
-            StartChanging(this, new ChangingEventArgs("Glow Fill Style"));
+            StartChanging(this, new ChangingEventArgs("Gradient Fill Style"));
 
             // get list of objects
-            var glowStyles = _selection.Select(f =>
-                (GlowRenderer)RendererDecorator.GetDecorator(f.Renderer, typeof(GlowRenderer))).ToList();
+            var fillStyles = _selection.Select(f => f.Style.FillStyle as IGradientFill).ToList();
 
             // send values back from GUI to object
-            glowStyles.SetProperty(f => f.Color = lbColor.BackColor);
+            fillStyles.SetProperty(f => f.GradientColor = lbGradientColor.BackColor);
 
             // fire event
             Changed(this, EventArgs.Empty);
         }
 
-        private void lbColor_BackColorChanged(object sender, EventArgs e)
+        private void lbGradientColor_BackColorChanged(object sender, EventArgs e)
         {
             UpdateObject();
         }
 
-        private void lbColor_Click(object sender, EventArgs e)
+        private void lbGradientColor_Click(object sender, EventArgs e)
         {
-            var dlg = new ColorDialog { Color = lbColor.BackColor };
+            var dlg = new ColorDialog { Color = lbGradientColor.BackColor };
             if (dlg.ShowDialog() == DialogResult.OK)
-                lbColor.BackColor = dlg.Color;
+                lbGradientColor.BackColor = dlg.Color;
         }
     }
 }

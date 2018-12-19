@@ -331,7 +331,7 @@ namespace SimpleEditor.Controllers
                 }
             }
             var selrect = Rectangle.Ceiling(_selection.GetTransformedPath().Path.GetBounds());
-            var angle = EditorModel.Common.Helper.GetAngle(_selection.Transform);
+            var angle = Helper.GetAngle(_selection.Transform);
             OnSelectedRangeChanging(selrect, angle);
         }
 
@@ -777,6 +777,16 @@ namespace SimpleEditor.Controllers
                                 Markers.Add(CreateMarker(MarkerType.Vertex, points[i], i, fig));
                         }
                     }
+                    // создаём маркеры градиента
+                    foreach (var fig in _selection.Where(figure => figure.Style.FillStyle is IGradientFill))
+                    {
+                        var gradient = fig.Style.FillStyle as IGradientFill;
+                        //get transformed points
+                        if (gradient == null) continue;
+                        var points = gradient.GetGradientPoints(fig);
+                        for (var i = 0; i < points.Length; i++)
+                            Markers.Add(CreateMarker(MarkerType.Grafient, points[i], i, fig));
+                    }
                     break;
                 case EditorMode.Select:
                     // создаём маркеры масштаба
@@ -804,16 +814,6 @@ namespace SimpleEditor.Controllers
                         Markers.Add(rotateMarker);
                     }
                     break;
-            }
-            // создаём маркеры линейного градиента
-            foreach (var fig in _selection.Where(figure => figure.Style.FillStyle is LinearGradientFill))
-            {
-                var lineGradient = fig.Style.FillStyle as LinearGradientFill;
-                //get transformed points
-                if (lineGradient == null) continue;
-                var points = lineGradient.GetGradientPoints(fig);
-                for (var i = 0; i < points.Length; i++)
-                    Markers.Add(CreateMarker(MarkerType.Grafient, points[i], i, fig));
             }
 
             // задаём геометрию маркеров по умолчанию 
@@ -967,5 +967,94 @@ namespace SimpleEditor.Controllers
             UpdateMarkerPositions();
             OnSelectedFigureChanged();
         }
+
+        public void ConvertToPath()
+        {
+            if (_selection.Count(fig => fig.Geometry.AllowedOperations.HasFlag(AllowedOperations.Pathed)) == 0) return;
+            LayerStartChanging();
+            _selection.ConvertToPath();
+            LayerChanged();
+            BuildMarkers();
+            UpdateMarkerPositions();
+        }
+
+        // определение типа формата работы с буфером обмена Windows
+        [NonSerialized]
+        readonly DataFormats.Format _drawsFormat = DataFormats.GetFormat("clipboardVectorFiguresFormat");
+
+        /// <summary>
+        /// Вырезать выделенные в буфер обмена
+        /// </summary>
+        public void CutSelectedToClipboard()
+        {
+            if (_selection.Count == 0) return;
+            var forcopy = _selection.Select(fig => fig.DeepClone()).ToList();
+            var clipboardDataObject = new DataObject(_drawsFormat.Name, forcopy);
+            Clipboard.SetDataObject(clipboardDataObject, false);
+            LayerStartChanging();
+            foreach (var fig in _selection)
+                _layer.Figures.Remove(fig);
+            LayerChanged();
+            _selection.Clear();
+            BuildMarkers();
+            UpdateMarkerPositions();
+            OnSelectedFigureChanged();
+        }
+
+        /// <summary>
+        /// Копировать выделенные в буфер обмена
+        /// </summary>
+        public void CopySelectedToClipboard()
+        {
+            if (_selection.Count == 0) return;
+            var forcopy = _selection.Select(fig => fig.DeepClone()).ToList();
+            var clipboardDataObject = new DataObject(_drawsFormat.Name, forcopy);
+            Clipboard.SetDataObject(clipboardDataObject, false);
+        }
+
+        /// <summary>
+        /// Признак возможности вставки данных из буфера обмена
+        /// </summary>
+        public bool CanPasteFromClipboard
+        {
+            get { return Clipboard.ContainsData(_drawsFormat.Name); }
+        }
+
+        /// <summary>
+        /// Вставка ранее скопированных фигур из буфера обмена
+        /// </summary>
+        public void PasteFromClipboardAndSelected()
+        {
+            if (!Clipboard.ContainsData(_drawsFormat.Name)) return;
+            var clipboardRetrievedObject = Clipboard.GetDataObject();
+            if (clipboardRetrievedObject == null) return;
+            var pastedObject = (List<Figure>)clipboardRetrievedObject.GetData(_drawsFormat.Name);
+            LayerStartChanging();
+            var list = new List<Figure>();
+            foreach (var fig in pastedObject)
+            {
+                _layer.Figures.Add(fig);
+                list.Add(fig);
+            }
+            _selection.Clear();
+            foreach (var fig in list)
+                _selection.Add(fig);
+            BuildMarkers();
+            UpdateMarkerPositions();
+            OnSelectedFigureChanged();
+        }
+
+        /// <summary>
+        /// Выбрать все фигуры
+        /// </summary>
+        public void SelectAllFigures()
+        {
+            _selection.Clear();
+            foreach (var fig in _layer.Figures) _selection.Add(fig);
+            BuildMarkers();
+            UpdateMarkerPositions();
+            OnSelectedFigureChanged();
+        }
+
     }
 }

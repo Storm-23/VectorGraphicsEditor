@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace EditorModel.Common
@@ -29,7 +28,7 @@ namespace EditorModel.Common
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static List<Figure> LoadSelection(string fileName)
+        public static IEnumerable<Figure> LoadSelection(string fileName)
         {
             var layer = LoadFromFile(fileName);
             var selection = new Selection();
@@ -41,31 +40,11 @@ namespace EditorModel.Common
             return layer.Figures;
         }
 
-        ///// <summary>
-        ///// Метод записи фигур из списка выделенных в файл
-        ///// </summary>
-        ///// <param name="fileName"></param>
-        //public static void SaveSelection(string fileName, Selection selection)
-        //{
-        //    if (selection.Count == 0) return;
-        //    if (File.Exists(fileName)) File.Delete(fileName);
-        //     var sel = selection.DeepClone();
-        //    var location = sel.GetTransformedPath().Path.GetBounds().Location;
-        //    sel.Translate(-location.X, -location.Y);
-        //    sel.PushTransformToSelectedFigures();
-        //    using (var fs = File.OpenWrite(fileName))
-        //    using (var zip = new GZipStream(fs, CompressionMode.Compress))
-        //    {
-        //        var formatter = new BinaryFormatter();
-        //        formatter.Serialize(zip, Helper.GetVersionInfo());
-        //        formatter.Serialize(zip, sel.ToList());
-        //    }
-        //}
-
         /// <summary>
         /// Метод записи всех фигур в слое в файл
         /// </summary>
         /// <param name="fileName"></param>
+        /// <param name="layer"></param>
         public static void SaveToFile(string fileName, Layer layer)
         {
             using (var fs = File.Create(fileName))

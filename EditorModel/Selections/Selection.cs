@@ -7,7 +7,6 @@ using System.Linq;
 using EditorModel.Common;
 using EditorModel.Figures;
 using EditorModel.Geometry;
-using EditorModel.Renderers;
 using EditorModel.Style;
 
 namespace EditorModel.Selections
@@ -134,7 +133,6 @@ namespace EditorModel.Selections
             foreach (var fig in _selected)
             {
                 path.Path.SetMarkers();
-                var transformedPath = fig.GetTransformedPath();
                 path.Path.AddPath(fig.GetTransformedPath(), false);
             }
 
@@ -170,24 +168,6 @@ namespace EditorModel.Selections
 
             GrabGeometry();
         }
-
-        ///// <summary>
-        ///// Применение своего изменения пути к выделенным фигурам
-        ///// </summary>
-        //public void PushPathDataToSelectedFigures()
-        //{
-        //    var fig = _selected.FirstOrDefault();
-        //    if (fig != null)
-        //    {
-        //        var types = Geometry.Path.Path.PathTypes;
-        //        var points = Geometry.Path.Path.PathPoints;
-        //        fig.Geometry = new PrimitiveGeometry(
-        //            new SerializableGraphicsPath { Path = new GraphicsPath(points, types) },
-        //            fig.Geometry.AllowedOperations);
-        //        fig.Transform = new SerializableGraphicsMatrix();
-        //    }
-        //    GrabGeometry();
-        //}
 
         /// <summary>
         /// Перенос фигур из списка
@@ -322,9 +302,9 @@ namespace EditorModel.Selections
         /// <param name="newPosition">Смещение</param>
         public void MoveGradient(Figure owner, int index, PointF newPosition)
         {
-            var gradient = owner.Style.FillStyle as LinearGradientFill;
+            var gradient = owner.Style.FillStyle as IGradientFill;
             if (gradient == null)
-                return; // работаем только с линейными градиентами
+                return; // работаем только с градиентами
             
             //get points in world coordinates
             var points = gradient.GetGradientPoints(owner);
@@ -464,53 +444,6 @@ namespace EditorModel.Selections
                 foreach (var figure in grp.Figures)
                 {
                     figure.Transform.Matrix.Multiply(grp.Transform, MatrixOrder.Append);
-                    list.Add(figure);
-                }
-            }
-            return list;
-        }
-
-        /// <summary>
-        /// Объединение выбранных фигур в одну
-        /// </summary>
-        /// <returns>Новая фигура, содержащая фигуры группы</returns>
-        public Figure Join()
-        {
-            var groupPath = new SerializableGraphicsPath();
-            foreach (var fig in _selected)
-            {
-                groupPath.Path.AddPath(fig.GetTransformedPath().Path, false);
-                if (_selected.Last() != fig)
-                    groupPath.Path.SetMarkers();
-            }
-            var group = new Figure
-            {
-                Geometry = new PrimitiveGeometry(groupPath, AllowedOperations.All)
-            };
-            return group;
-        }
-
-        /// <summary>
-        /// Разъединение фигур в список
-        /// todo: Настройки AllowedOperations для примитивных фигур теряются!
-        /// </summary>
-        /// <returns>Список фигур, содержавшихся внутри группы</returns>
-        public List<Figure> Unjoin()
-        {
-            var list = new List<Figure>();
-            foreach (var pathIterator in _selected.Select(fig =>
-                new GraphicsPathIterator(fig.GetTransformedPath().Path)))
-            {
-                pathIterator.Rewind();
-                var pathSection = new SerializableGraphicsPath();
-                bool closed;
-                while (pathIterator.NextSubpath(pathSection.Path, out closed) > 0)
-                {
-                    var figure = new Figure
-                    {
-                        Geometry = new PrimitiveGeometry(pathSection, AllowedOperations.All)
-                    };
-                    pathSection = new SerializableGraphicsPath();
                     list.Add(figure);
                 }
             }

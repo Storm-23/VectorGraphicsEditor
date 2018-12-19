@@ -29,7 +29,7 @@ namespace EditorModel.Figures
 
         public Layer()
         {
-            FillStyle = new Fill { IsVisible = false };
+            FillStyle = new DefaultFill { IsVisible = false };
         }
 
     }

@@ -1,4 +1,7 @@
+using EditorModel.Figures;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EditorModel.Renderers
 {
@@ -42,15 +45,25 @@ namespace EditorModel.Renderers
         /// </summary>
         /// <param name="renderer">Рендерер для исследования</param>
         /// <returns>Первичный рендерер</returns>
-        public static Renderer GetBaseRenerer(Renderer renderer)
+        public static Renderer GetBaseRenderer(Renderer renderer)
         {
             var rendererDecorator = renderer as RendererDecorator;
-            return rendererDecorator == null ? renderer : GetBaseRenerer(rendererDecorator._renderer);
+            return rendererDecorator == null ? renderer : GetBaseRenderer(rendererDecorator._renderer);
         }
 
         public static bool ContainsAnyDecorator(Renderer renderer)
         {
             return renderer as RendererDecorator != null;
+        }
+
+        public static bool ExistsWithoutThisDecorator(IEnumerable<Figure> figures, Type type)
+        {
+            return figures.Count(figure => !ContainsType(figure.Renderer, type)) > 0;
+        }
+
+        public static IEnumerable<Figure> WhereContainsDecorator(IEnumerable<Figure> figures, Type type)
+        {
+            return figures.Where(figure => !ContainsType(figure.Renderer, type));
         }
     }
 }

@@ -1,8 +1,6 @@
 using EditorModel.Common;
-using EditorModel.Figures;
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace EditorModel.Geometry
 {
@@ -50,14 +48,9 @@ namespace EditorModel.Geometry
             EndPoint = StartPoint = startPoint;
         }
 
-        ~FrameGeometry()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
-            if (_path != null) _path.Dispose();
+            _path?.Dispose();
         }
     }
 }

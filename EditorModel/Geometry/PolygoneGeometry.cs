@@ -2,7 +2,6 @@
 using System;
 using System.Drawing;
 using EditorModel.Figures;
-using System.Drawing.Drawing2D;
 
 namespace EditorModel.Geometry
 {
@@ -71,14 +70,9 @@ namespace EditorModel.Geometry
             Points = points;
         }
 
-        ~PolygoneGeometry()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
-            if (_path != null) _path.Dispose();
+            _path?.Dispose();
         }
 
         /// <summary>
@@ -87,7 +81,7 @@ namespace EditorModel.Geometry
         internal PolygoneGeometry(bool isClosed = true)
         {
             IsClosed = isClosed;
-            _allowedOperations = AllowedOperations.All;
+            _allowedOperations = AllowedOperations.All ^ AllowedOperations.Pathed;
             var rect = new RectangleF(-0.5f, -0.5f, 1, 1);
             if (isClosed)
                 _points = new[]
@@ -143,5 +137,11 @@ namespace EditorModel.Geometry
         /// Свойство возвращает определённые в конструкторе ограничения для операций
         /// </summary>
         public override AllowedOperations AllowedOperations { get { return _allowedOperations; } }
+
+        public override string ToString()
+        {
+            return IsClosed ? "Polygone" : "Polyline";
+        }
+
     }
 }

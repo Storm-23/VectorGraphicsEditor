@@ -1,8 +1,5 @@
 ﻿using EditorModel.Common;
-using EditorModel.Figures;
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace EditorModel.Geometry
 {
@@ -20,6 +17,7 @@ namespace EditorModel.Geometry
         Select = 0x8,       // может быть выбран
         Skew = 0x10,        // может быть искажён
         Vertex = 0x20,      // может изменять внутренние вершины
+        Pathed = 0x40,      // может быть конвертирован в путь
         // новые режимы добавлять здесь
 
         All = 0xffffffff,   // всё можно
@@ -31,6 +29,8 @@ namespace EditorModel.Geometry
     [Serializable]
     public abstract class Geometry
     {
+        public string Name { get; set; }
+
         /// <summary>
         /// Предоставление пути для рисования фигуры
         /// </summary>

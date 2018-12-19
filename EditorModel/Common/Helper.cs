@@ -1,7 +1,6 @@
 ﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
-using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 
@@ -11,11 +10,9 @@ namespace EditorModel.Common
     {
         public static float GetAngle(Matrix matrix)
         {
-            // взято из ответов https://stackoverflow.com/questions/14125771/calculate-angle-from-matrix-transform
             var x = new Vector(1, 0);
-            var matr = new System.Windows.Media.Matrix(matrix.Elements[0], matrix.Elements[1], matrix.Elements[2],
-                                                       matrix.Elements[3], matrix.Elements[4], matrix.Elements[5]);
-            var rotated = Vector.Multiply(x, matr);
+            var winMatrix = CreateWindowsMatrix(matrix);
+            var rotated = Vector.Multiply(x, winMatrix);
             var angleBetween = Vector.AngleBetween(x, rotated);
             return (float)angleBetween;
         }
@@ -24,10 +21,9 @@ namespace EditorModel.Common
         {
             var x = new Vector(1, 0);
             var y = new Vector(0, 1);
-            var matr = new System.Windows.Media.Matrix(matrix.Elements[0], matrix.Elements[1], matrix.Elements[2],
-                                                       matrix.Elements[3], matrix.Elements[4], matrix.Elements[5]);
-            var scaledX = Vector.Multiply(x, matr);
-            var scaledY = Vector.Multiply(y, matr);
+            var winMatrix = CreateWindowsMatrix(matrix);
+            var scaledX = Vector.Multiply(x, winMatrix);
+            var scaledY = Vector.Multiply(y, winMatrix);
             return new SizeF((float)scaledX.Length, (float)scaledY.Length);
         }
 
@@ -35,10 +31,9 @@ namespace EditorModel.Common
         {
             var x = new Vector(1, 0);
             var y = new Vector(0, 1);
-            var matr = new System.Windows.Media.Matrix(matrix.Elements[0], matrix.Elements[1], matrix.Elements[2],
-                                                       matrix.Elements[3], matrix.Elements[4], matrix.Elements[5]);
-            var skewX = Vector.Multiply(x, matr);
-            var skewY = Vector.Multiply(y, matr);
+            var winMatrix = CreateWindowsMatrix(matrix);
+            var skewX = Vector.Multiply(x, winMatrix);
+            var skewY = Vector.Multiply(y, winMatrix);
             var angleBetween = Vector.AngleBetween(skewX, skewY);
             return (float)angleBetween;
         }
@@ -131,7 +126,7 @@ namespace EditorModel.Common
         /// Сохранить все фигуры в поток
         /// </summary>
         /// <param name="stream">поток в памяти</param>
-        /// <param name="listToSave">список для сохранения</param>
+        /// <param name="obj"></param>
         public static void SaveToStream(Stream stream, object obj)
         {
             var formatter = new BinaryFormatter();
@@ -149,5 +144,10 @@ namespace EditorModel.Common
             return formatter.Deserialize(stream);
         }
 
+        private static System.Windows.Media.Matrix CreateWindowsMatrix(Matrix matrix)
+        {
+            return new System.Windows.Media.Matrix(matrix.Elements[0], matrix.Elements[1], matrix.Elements[2],
+                                                       matrix.Elements[3], matrix.Elements[4], matrix.Elements[5]);
+        }
     }
 }

@@ -51,8 +51,9 @@ namespace EditorModel.Renderers
                                                    new PointF(0.5f, -0.5f),     // destination for upper-right point of original
                                                    new PointF(-0.5f, 0.5f)};    // destination for lower-left point of original
                     figure.Transform.Matrix.TransformPoints(destinationPoints);
-                    if (image.PixelFormat == System.Drawing.Imaging.PixelFormat.DontCare) return;
-                    graphics.DrawImage(image, destinationPoints);
+                    var unit = GraphicsUnit.Pixel;
+                    var rect = Image.Bitmap.GetBounds(ref unit);
+                    graphics.DrawImage(image, destinationPoints, rect, GraphicsUnit.Pixel);
                 }
             }
         }
@@ -62,7 +63,8 @@ namespace EditorModel.Renderers
         /// </summary>
         public override AllowedRendererDecorators AllowedDecorators
         {
-            get { return AllowedRendererDecorators.All ^ (AllowedRendererDecorators.Shadow | AllowedRendererDecorators.Glow); }
+            get { return AllowedRendererDecorators.All ^ 
+                    (AllowedRendererDecorators.Shadow | AllowedRendererDecorators.Glow); }
         }
     }
 }
