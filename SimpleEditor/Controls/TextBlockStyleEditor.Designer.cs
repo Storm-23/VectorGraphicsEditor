@@ -32,6 +32,11 @@
             this.cbFontName = new System.Windows.Forms.ComboBox();
             this.lbText = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbWrap = new System.Windows.Forms.CheckBox();
+            this.nudBottom = new System.Windows.Forms.NumericUpDown();
+            this.nudRight = new System.Windows.Forms.NumericUpDown();
+            this.nudLeft = new System.Windows.Forms.NumericUpDown();
+            this.nudTop = new System.Windows.Forms.NumericUpDown();
             this.cbFontSize = new System.Windows.Forms.ComboBox();
             this.btnBottomRightAllign = new System.Windows.Forms.Button();
             this.btnMiddleRightAllign = new System.Windows.Forms.Button();
@@ -46,6 +51,10 @@
             this.btnMiddleLeftAllign = new System.Windows.Forms.Button();
             this.btnTopLeftAllign = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBottom)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRight)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLeft)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTop)).BeginInit();
             this.SuspendLayout();
             // 
             // cbFontName
@@ -56,7 +65,7 @@
             this.cbFontName.Location = new System.Drawing.Point(10, 15);
             this.cbFontName.Margin = new System.Windows.Forms.Padding(3, 1, 0, 0);
             this.cbFontName.Name = "cbFontName";
-            this.cbFontName.Size = new System.Drawing.Size(177, 21);
+            this.cbFontName.Size = new System.Drawing.Size(107, 21);
             this.cbFontName.TabIndex = 0;
             this.cbFontName.SelectionChangeCommitted += new System.EventHandler(this.cbFontName_SelectionChangeCommitted);
             // 
@@ -66,10 +75,10 @@
             this.lbText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbText.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lbText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lbText.Location = new System.Drawing.Point(93, 67);
+            this.lbText.Location = new System.Drawing.Point(93, 38);
             this.lbText.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
             this.lbText.Name = "lbText";
-            this.lbText.Size = new System.Drawing.Size(76, 67);
+            this.lbText.Size = new System.Drawing.Size(50, 27);
             this.lbText.TabIndex = 2;
             this.lbText.Text = "Текст";
             this.lbText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -81,6 +90,11 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.cbWrap);
+            this.groupBox1.Controls.Add(this.nudBottom);
+            this.groupBox1.Controls.Add(this.nudRight);
+            this.groupBox1.Controls.Add(this.nudLeft);
+            this.groupBox1.Controls.Add(this.nudTop);
             this.groupBox1.Controls.Add(this.cbFontSize);
             this.groupBox1.Controls.Add(this.btnBottomRightAllign);
             this.groupBox1.Controls.Add(this.btnMiddleRightAllign);
@@ -96,14 +110,57 @@
             this.groupBox1.Controls.Add(this.btnTopLeftAllign);
             this.groupBox1.Controls.Add(this.cbFontName);
             this.groupBox1.Controls.Add(this.lbText);
-            this.groupBox1.Location = new System.Drawing.Point(-3, 1);
+            this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(1);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(1);
-            this.groupBox1.Size = new System.Drawing.Size(200, 148);
+            this.groupBox1.Size = new System.Drawing.Size(205, 151);
             this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Text Block Style";
+            // 
+            // cbWrap
+            // 
+            this.cbWrap.AutoSize = true;
+            this.cbWrap.Location = new System.Drawing.Point(149, 45);
+            this.cbWrap.Name = "cbWrap";
+            this.cbWrap.Size = new System.Drawing.Size(52, 17);
+            this.cbWrap.TabIndex = 14;
+            this.cbWrap.Text = "Wrap";
+            this.cbWrap.UseVisualStyleBackColor = true;
+            this.cbWrap.CheckedChanged += new System.EventHandler(this.cbFontName_SelectionChangeCommitted);
+            // 
+            // nudBottom
+            // 
+            this.nudBottom.Location = new System.Drawing.Point(130, 114);
+            this.nudBottom.Name = "nudBottom";
+            this.nudBottom.Size = new System.Drawing.Size(39, 20);
+            this.nudBottom.TabIndex = 13;
+            this.nudBottom.ValueChanged += new System.EventHandler(this.cbFontName_SelectionChangeCommitted);
+            // 
+            // nudRight
+            // 
+            this.nudRight.Location = new System.Drawing.Point(156, 91);
+            this.nudRight.Name = "nudRight";
+            this.nudRight.Size = new System.Drawing.Size(39, 20);
+            this.nudRight.TabIndex = 13;
+            this.nudRight.ValueChanged += new System.EventHandler(this.cbFontName_SelectionChangeCommitted);
+            // 
+            // nudLeft
+            // 
+            this.nudLeft.Location = new System.Drawing.Point(93, 91);
+            this.nudLeft.Name = "nudLeft";
+            this.nudLeft.Size = new System.Drawing.Size(39, 20);
+            this.nudLeft.TabIndex = 13;
+            this.nudLeft.ValueChanged += new System.EventHandler(this.cbFontName_SelectionChangeCommitted);
+            // 
+            // nudTop
+            // 
+            this.nudTop.Location = new System.Drawing.Point(130, 68);
+            this.nudTop.Name = "nudTop";
+            this.nudTop.Size = new System.Drawing.Size(39, 20);
+            this.nudTop.TabIndex = 13;
+            this.nudTop.ValueChanged += new System.EventHandler(this.cbFontName_SelectionChangeCommitted);
             // 
             // cbFontSize
             // 
@@ -214,7 +271,7 @@
             // 
             this.btnTextUnderline.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.btnTextUnderline.Image = global::SimpleEditor.Properties.Resources.underline;
-            this.btnTextUnderline.Location = new System.Drawing.Point(145, 39);
+            this.btnTextUnderline.Location = new System.Drawing.Point(171, 15);
             this.btnTextUnderline.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
             this.btnTextUnderline.Name = "btnTextUnderline";
             this.btnTextUnderline.Size = new System.Drawing.Size(24, 22);
@@ -262,7 +319,7 @@
             // 
             this.btnTextItalic.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.btnTextItalic.Image = global::SimpleEditor.Properties.Resources.italic;
-            this.btnTextItalic.Location = new System.Drawing.Point(119, 39);
+            this.btnTextItalic.Location = new System.Drawing.Point(145, 15);
             this.btnTextItalic.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
             this.btnTextItalic.Name = "btnTextItalic";
             this.btnTextItalic.Size = new System.Drawing.Size(24, 22);
@@ -298,7 +355,7 @@
             // 
             this.btnTextBold.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.btnTextBold.Image = global::SimpleEditor.Properties.Resources.bold;
-            this.btnTextBold.Location = new System.Drawing.Point(93, 39);
+            this.btnTextBold.Location = new System.Drawing.Point(119, 15);
             this.btnTextBold.Margin = new System.Windows.Forms.Padding(2, 1, 0, 0);
             this.btnTextBold.Name = "btnTextBold";
             this.btnTextBold.Size = new System.Drawing.Size(24, 22);
@@ -338,8 +395,13 @@
             this.Controls.Add(this.groupBox1);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "TextBlockStyleEditor";
-            this.Size = new System.Drawing.Size(202, 167);
+            this.Size = new System.Drawing.Size(212, 155);
             this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBottom)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRight)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLeft)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTop)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -363,5 +425,10 @@
         private System.Windows.Forms.Button btnTextUnderline;
         private System.Windows.Forms.Button btnTextItalic;
         private System.Windows.Forms.Button btnTextBold;
+        private System.Windows.Forms.NumericUpDown nudBottom;
+        private System.Windows.Forms.NumericUpDown nudRight;
+        private System.Windows.Forms.NumericUpDown nudLeft;
+        private System.Windows.Forms.NumericUpDown nudTop;
+        private System.Windows.Forms.CheckBox cbWrap;
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using EditorModel.Renderers;
 using EditorModel.Selections;
-using TextRenderer = EditorModel.Renderers.TextRenderer;
+using EditorModel.Common;
 
 namespace SimpleEditor.Controls
 {
@@ -20,32 +21,54 @@ namespace SimpleEditor.Controls
         public TextBlockStyleEditor()
         {
             InitializeComponent();
+            InitFontNamesSelector();
+        }
+
+        private async void InitFontNamesSelector()
+        {
             cbFontName.Items.Clear();
-            foreach (var fontName in ControlsHelper.GetInstalledFontCollection())
+            var fontNames = new List<string>();
+            foreach (var fontName in await ControlsHelper.GetInstalledFontCollectionAsync())
                 cbFontName.Items.Add(fontName);
         }
 
         public void Build(Selection selection)
         {
             // check visibility
-            Visible = selection.ForAll(f => RendererDecorator.GetBaseRenderer(f.Renderer) is TextRenderer);
+            Visible = selection.ForAll(f => 
+                         RendererDecorator.GetBaseRenderer(f.Renderer) is ITextBlock ||
+                         RendererDecorator.GetDecorator(f.Renderer, typeof(TextBlockDecorator)) is ITextBlock);
             if (!Visible) return; // do not build anything
 
             // remember editing object
             _selection = selection;
 
-            // get list of objects
-            var fontStyles = _selection.Select(f =>
-                            (TextRenderer)RendererDecorator.GetBaseRenderer(f.Renderer)).ToList();
+            var textBlockStyles = from figure in _selection
+                        where RendererDecorator.GetBaseRenderer(figure.Renderer) is ITextBlock ||
+                              RendererDecorator.GetDecorator(figure.Renderer, typeof(TextBlockDecorator)) is ITextBlock
+                        let decorator = RendererDecorator.GetBaseRenderer(figure.Renderer) is ITextBlock ?
+                                          RendererDecorator.GetBaseRenderer(figure.Renderer) as ITextBlock :
+                                          RendererDecorator.GetDecorator(figure.Renderer, typeof(TextBlockDecorator)) as ITextBlock
+                        select decorator;
 
-            // copy properties of object to GUI
+            var isBezierText = selection.ForAll(f => RendererDecorator.GetBaseRenderer(f.Renderer) is BezierTextRenderer);
+
             _updating++;
 
-            cbFontName.Text = fontStyles.GetProperty(f => f.FontName);
-            cbFontSize.Text = fontStyles.GetProperty(f => f.FontSize.ToString("0"));
-            _fontStyle = fontStyles.GetProperty(f => f.FontStyle);
-            lbText.Text = fontStyles.GetProperty(f => f.Text);
-            lbText.TextAlign = fontStyles.GetProperty(f => f.Alignment);
+            cbFontName.Text = textBlockStyles.GetProperty(f => f.FontName);
+            cbFontSize.Text = textBlockStyles.GetProperty(f => f.FontSize.ToString("0"));
+            _fontStyle = textBlockStyles.GetProperty(f => f.FontStyle);
+            lbText.Text = textBlockStyles.GetProperty(f => f.Text);
+            lbText.TextAlign = textBlockStyles.GetProperty(f => f.Alignment);
+            nudLeft.Value = textBlockStyles.GetProperty(f => f.Padding.Left);
+            nudTop.Value = textBlockStyles.GetProperty(f => f.Padding.Top);
+            nudRight.Value = textBlockStyles.GetProperty(f => f.Padding.Right);
+            nudBottom.Value = textBlockStyles.GetProperty(f => f.Padding.Bottom);
+            cbWrap.Checked = textBlockStyles.GetProperty(f => f.WordWrap);
+
+            cbWrap.Enabled = nudLeft.Enabled = nudTop.Enabled = nudRight.Enabled = nudBottom.Enabled =
+               btnTopLeftAllign.Enabled = btnMiddleLeftAllign.Enabled = btnBottomLeftAllign.Enabled =
+               btnTopRightAllign.Enabled = btnMiddleRightAllign.Enabled = btnBottomRightAllign.Enabled = !isBezierText;
 
             _updating--;
         }
@@ -58,15 +81,26 @@ namespace SimpleEditor.Controls
             StartChanging(this, new ChangingEventArgs("Text Block Style"));
 
             // get list of objects
-            var fontStyles = _selection.Select(f =>
-                            (TextRenderer)RendererDecorator.GetBaseRenderer(f.Renderer)).ToList();
+            var textBlockStyles = from figure in _selection
+                                 where RendererDecorator.GetBaseRenderer(figure.Renderer) is ITextBlock ||
+                                       RendererDecorator.GetDecorator(figure.Renderer, typeof(TextBlockDecorator)) is ITextBlock
+                                 let decorator = RendererDecorator.GetBaseRenderer(figure.Renderer) is ITextBlock ?
+                                                   RendererDecorator.GetBaseRenderer(figure.Renderer) as ITextBlock :
+                                                   RendererDecorator.GetDecorator(figure.Renderer, typeof(TextBlockDecorator)) as ITextBlock
+                                 select decorator;
 
             // send values back from GUI to object
-            fontStyles.SetProperty(f => f.FontName = cbFontName.Text);
-            fontStyles.SetProperty(f => f.FontSize = float.Parse(cbFontSize.Text));
-            fontStyles.SetProperty(f => f.FontStyle = _fontStyle);
-            fontStyles.SetProperty(f => f.Text = lbText.Text);
-            fontStyles.SetProperty(f => f.Alignment = lbText.TextAlign);
+            textBlockStyles.SetProperty(f => f.FontName = cbFontName.Text);
+            float fontSize;
+            if (float.TryParse(cbFontSize.Text, out fontSize))
+                textBlockStyles.SetProperty(f => f.FontSize = fontSize);
+            textBlockStyles.SetProperty(f => f.FontStyle = _fontStyle);
+            textBlockStyles.SetProperty(f => f.Text = lbText.Text);
+            textBlockStyles.SetProperty(f => f.Alignment = lbText.TextAlign);
+            var padding = new Padding((int)nudLeft.Value, (int)nudTop.Value, 
+                                      (int)nudRight.Value, (int)nudBottom.Value);
+            textBlockStyles.SetProperty(f => f.Padding = padding);
+            textBlockStyles.SetProperty(f => f.WordWrap = cbWrap.Checked);
             // fire event
             Changed(this, EventArgs.Empty);
         }
@@ -137,7 +171,7 @@ namespace SimpleEditor.Controls
                 e.Graphics.FillRectangle(brush, rect);
             using (var sf = new StringFormat())
             {
-                EditorModel.Common.Helper.UpdateStringFormat(sf, lbText.TextAlign);
+                Helper.UpdateStringFormat(sf, lbText.TextAlign);
                 e.Graphics.DrawString(text, lbText.Font, Brushes.Black, rect, sf);
             }
         }

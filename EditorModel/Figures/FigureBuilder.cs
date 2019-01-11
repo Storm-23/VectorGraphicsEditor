@@ -5,6 +5,7 @@ using System.Drawing;
 using EditorModel.Geometry;
 using EditorModel.Renderers;
 using EditorModel.Style;
+using System.Drawing.Drawing2D;
 
 namespace EditorModel.Figures
 {
@@ -74,6 +75,7 @@ namespace EditorModel.Figures
         public static void BuildMarkerGeometry(Figure marker)
         {
             var path = new SerializableGraphicsPath();
+            marker.Style.BorderStyle.Width = 0;
             // здесь задаём размер макера в 5 единиц и смешение от центра маркера в -2 единицы
             path.Path.AddRectangle(new RectangleF(-MARKER_SIZE / 2f, -MARKER_SIZE / 2f, MARKER_SIZE, MARKER_SIZE));
             marker.Geometry = new PrimitiveGeometry(path, AllowedOperations.All ^ 
@@ -117,6 +119,28 @@ namespace EditorModel.Figures
         }
 
         /// <summary>
+        /// Подключаем к фигуре геометрию текста на кривой
+        /// </summary>
+        /// <param name="figure">Фигура для присвоения геометрии</param>
+        /// <param name="text">Текстовая строка</param>
+        public static void BuildBezierTextGeometry(Figure figure, string text)
+        {
+            var path = new SerializableGraphicsPath();
+            path.Path.AddBezier(-0.5f, -0.5f,  0, 1,  0.5f, -0.5f,  1, 1);
+
+            figure.Geometry = new PrimitiveBezier(path, AllowedOperations.All ^ 
+                (AllowedOperations.Pathed | AllowedOperations.Skew))
+            { Name = "BezierText" };
+
+            figure.Style.BorderStyle = null; // отключение рамки для рендера
+            figure.Style.FillStyle = new DefaultFill(AllowedFillDecorators.All ^
+                AllowedFillDecorators.RadialGradient)
+            { Color = Color.Black };
+
+            figure.Renderer = new BezierTextRenderer(text) { FontSize = 14f };
+        }
+
+        /// <summary>
         /// Подключаем к фигуре геометрию и рендерер внешнего графического файла
         /// </summary>
         /// <param name="figure"></param>
@@ -135,13 +159,63 @@ namespace EditorModel.Figures
         }
 
         /// <summary>
-        /// Подключаем к фигуре геометрию полигона
+        /// Подключаем к фигуре геометрию ломаной линии
         /// </summary>
         /// <param name="figure"></param>
-        public static void BuildPolygoneGeometry(Figure figure)
+        public static void BuildPolyGeometry(Figure figure, bool isClosed = true, PointF[] points = null)
+        {
+            figure.Style.FillStyle.IsVisible = isClosed;
+            figure.Geometry = new PolygoneGeometry(isClosed, points) { Name = isClosed ? "Polygon" : "Polyline" };
+            NormalizeVertex(figure);
+        }
+
+        /// <summary>
+        /// Подключаем к фигуре геометрию кривой линии
+        /// </summary>
+        /// <param name="figure"></param>
+        public static void BuildBezierGeometry(Figure figure, PointF[] points, byte[] types)
         {
             figure.Style.FillStyle.IsVisible = false;
-            figure.Geometry = new PolygoneGeometry() { Name = "Polygone" };
+            figure.Geometry = new BezierGeometry(points, types) { Name = "Bezier" };
+            if (types.Length > 3)
+                NormalizeVertex(figure);
+        }
+
+        private static void NormalizeVertex(Figure figure)
+        {
+            var transformed = figure.Geometry as ITransformedGeometry;
+            if (transformed != null)
+            {
+                var bounds = figure.GetTransformedPath().Path.GetBounds();
+                var points = transformed.GetTransformedPoints(figure);
+                figure.Transform.Matrix.TransformPoints(points);
+                transformed.SetTransformedPoints(figure, points);
+                figure.Transform.Matrix = new Matrix();
+                var eps = Helper.EPSILON;
+                var kfx = (bounds.Width < eps) ? eps : 1 / bounds.Width;
+                var kfy = (bounds.Height < eps) ? eps : 1 / bounds.Height;
+                var pts = transformed.GetTransformedPoints(figure);
+                for (var i = 0; i < pts.Length; i++)
+                {
+                    pts[i].X = (pts[i].X - bounds.X) / bounds.Width - 0.5f;
+                    pts[i].Y = (pts[i].Y - bounds.Y) / bounds.Height - 0.5f;
+                }
+                transformed.SetTransformedPoints(figure, pts);
+                var m = new Matrix();
+                m.Translate(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
+                m.Scale(1 / kfx, 1 / kfy);
+                figure.Transform.Matrix = m;
+            }
+        }
+
+        /// <summary>
+        /// Подключаем к фигуре геометрию линии дуги, хорды и, как её там...
+        /// </summary>
+        /// <param name="figure"></param>
+        public static void BuildWedgeGeometry(Figure figure, WedgeKind kind)
+        {
+            figure.Style.FillStyle.IsVisible = kind != WedgeKind.Arc;
+            figure.Geometry = new WedgeGeometry(kind, 0, 270);
         }
 
         /// <summary>
@@ -175,23 +249,25 @@ namespace EditorModel.Figures
         }
 
         /// <summary>
-        /// Подключаем к фигуре геометрию ломаной линии
-        /// </summary>
-        /// <param name="figure"></param>
-        public static void BuildPolylineGeometry(Figure figure)
-        {
-            figure.Style.FillStyle.IsVisible = false;
-            figure.Geometry = new PolygoneGeometry(isClosed: false) { Name = "Polyline" };
-        }
-
-        /// <summary>
         /// Определение вида рамки выбора
         /// </summary>
         /// <param name="figure"></param>
         /// <param name="startPoint"></param>
         public static void BuildFrameGeometry(Figure figure, Point startPoint)
         {
+            figure.Style.BorderStyle.Width = 0;
             figure.Geometry = new FrameGeometry(startPoint) { Name = "Frame" };
+        }
+
+        public static void BuildAddLineGeometry(Figure figure, Point startPoint, bool isClosed, bool isSmoothed)
+        {
+            figure.Style.BorderStyle.Width = 0;
+            figure.Geometry = new AddLineGeometry(startPoint)
+            {
+                Name = "AddLine",
+                IsClosed = isClosed,
+                IsSmoothed = isSmoothed
+            };
         }
     }
 }

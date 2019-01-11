@@ -9,10 +9,9 @@ namespace EditorModel.Geometry
     /// Содержит геометрию полигона
     /// </summary>
     [Serializable]
-    public sealed class PolygoneGeometry : Geometry, IDisposable
+    public sealed class PolygoneGeometry : Geometry, IDisposable, ITransformedGeometry
     {
         private PointF[] _points;
-        private bool _isClosed = true;
 
         /// <summary>
         /// Локальное поле для хранения пути
@@ -27,13 +26,14 @@ namespace EditorModel.Geometry
         /// <summary>
         /// Признак замкнутого контура фигуры
         /// </summary>
-        public bool IsClosed
-        {
-            get { return _isClosed; }
-            set { _isClosed = value; }
-        }
+        public bool IsClosed { get; set; } = true;
 
         public bool IsSmoothed { get; set; }
+
+        public byte[] GetTransformedPointTypes(Figure owner)
+        {
+            return (byte[])_path.Path.PathTypes.Clone();
+        }
 
         /// <summary>
         /// Точки контура фигуры
@@ -78,28 +78,27 @@ namespace EditorModel.Geometry
         /// <summary>
         /// Конструктор с настройками по умолчанию
         /// </summary>
-        internal PolygoneGeometry(bool isClosed = true)
+        internal PolygoneGeometry(bool isClosed = true, PointF[] points = null)
         {
             IsClosed = isClosed;
             _allowedOperations = AllowedOperations.All ^ AllowedOperations.Pathed;
             var rect = new RectangleF(-0.5f, -0.5f, 1, 1);
-            if (isClosed)
+            if (points != null)
+            {
+                _points = (PointF[])points.Clone();
+            }
+            else if (isClosed)
                 _points = new[]
                     {
                         new PointF(rect.Left, rect.Top),
-                        new PointF(rect.Left + rect.Width/2, rect.Top),
                         new PointF(rect.Left + rect.Width, rect.Top),
-                        new PointF(rect.Left + rect.Width, rect.Top + rect.Height/2),
                         new PointF(rect.Left + rect.Width, rect.Top + rect.Height),
-                        new PointF(rect.Left + rect.Width/2, rect.Top + rect.Height),
-                        new PointF(rect.Left, rect.Top + rect.Height),
-                        new PointF(rect.Left, rect.Top + rect.Height/2)
+                        new PointF(rect.Left, rect.Top + rect.Height)
                     };
             else
                 _points = new[]
                     {
                         new PointF(rect.Left, rect.Top),
-                        new PointF(rect.Left + rect.Width/2, rect.Top + rect.Height/2),
                         new PointF(rect.Left + rect.Width, rect.Top + rect.Height)
                     };
         }
@@ -140,7 +139,7 @@ namespace EditorModel.Geometry
 
         public override string ToString()
         {
-            return IsClosed ? "Polygone" : "Polyline";
+            return IsClosed ? "Polygon" : "Polyline";
         }
 
     }
